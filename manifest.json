@@ -1,6 +1,6 @@
 {
-  "name": "Lucro da Rota",
-  "short_name": "Lucro Rota",
+  "name": "INtregas",
+  "short_name": "INtregas",
   "description": "Calcule o lucro final de uma corrida a partir do km, consumo, preço do combustível e valor da rota.",
   "start_url": "./index.html",
   "display": "standalone",

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Lucro da Rota</title>
+<title>INtregas</title>
 <meta name="theme-color" content="#0F6E56" />
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="icon-192.png" />
@@ -29,17 +29,17 @@
   }
   header h1 { font-size: 20px; font-weight: 600; margin: 0; }
   header p { font-size: 13px; margin: 4px 0 0; opacity: 0.85; }
-  .back-btn {
+  .back-btn, .export-btn {
     position: absolute;
-    left: 14px;
-    top: 18px;
+    top: 16px;
     background: none;
     border: none;
     color: #E1F5EE;
-    font-size: 22px;
-    padding: 4px 8px;
+    padding: 6px 8px;
     display: none;
   }
+  .back-btn { left: 10px; font-size: 22px; }
+  .export-btn { right: 10px; }
   main {
     max-width: 420px;
     margin: -14px auto 0;
@@ -174,6 +174,49 @@
     border-color: #0F6E56;
     color: #E1F5EE;
   }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .summary-box {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 12px 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    text-align: center;
+  }
+  .summary-box .label { font-size: 11px; color: #888780; margin-bottom: 4px; }
+  .summary-box .value { font-size: 15px; font-weight: 700; color: #085041; }
+  .summary-box .value.neg { color: #791F1F; }
+  .goal-box {
+    background: #FFFFFF;
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    margin-bottom: 12px;
+  }
+  .goal-box .goal-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .goal-box .goal-top .name { color: #5F5E5A; font-weight: 600; }
+  .goal-box .goal-top .nums { color: #888780; }
+  .goal-bar-track {
+    height: 8px;
+    background: #F1EFE8;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .goal-bar-fill {
+    height: 100%;
+    background: #1D9E75;
+    border-radius: 999px;
+  }
+  .goal-bar-fill.done { background: #639922; }
   .day-group { margin-bottom: 18px; }
   .day-title {
     font-size: 13px;
@@ -206,17 +249,21 @@
     align-items: center;
     border-top: 1px solid #F1EFE8;
     font-size: 13px;
+    gap: 8px;
   }
   .entry-row .meta { color: #888780; }
+  .entry-row .right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .entry-row .lucro-val { font-weight: 700; color: #085041; }
   .entry-row .lucro-val.neg { color: #791F1F; }
-  .entry-row .del {
+  .entry-row button.icon-btn {
     background: none;
     border: none;
     color: #B4B2A9;
-    font-size: 16px;
-    padding: 0 0 0 10px;
+    padding: 2px;
+    display: flex;
+    align-items: center;
   }
+  .entry-row button.icon-btn svg { width: 16px; height: 16px; }
   .empty-msg {
     text-align: center;
     color: #888780;
@@ -228,7 +275,10 @@
 <body>
 <header>
   <button class="back-btn" id="back-btn">&#8592;</button>
-  <h1 id="header-title">Lucro da rota</h1>
+  <button class="export-btn" id="export-btn" aria-label="Exportar histórico">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  </button>
+  <h1 id="header-title">INtregas</h1>
   <p id="header-sub">Escolha o que você quer fazer</p>
 </header>
 <main>
@@ -244,7 +294,11 @@
     </button>
     <button class="big-btn" id="go-history">
       <div class="title">Ver histórico</div>
-      <div class="desc">Corridas registradas por dia e por app</div>
+      <div class="desc">Corridas, resumos e exportação</div>
+    </button>
+    <button class="big-btn" id="go-metas">
+      <div class="title">Metas de lucro</div>
+      <div class="desc">Defina metas diária e semanal</div>
     </button>
   </div>
 
@@ -312,16 +366,40 @@
   </div>
 
   <div class="screen" id="screen-history">
+    <div class="summary-grid" id="summary-grid"></div>
+    <div id="goals-progress"></div>
     <div id="history-list"></div>
+  </div>
+
+  <div class="screen" id="screen-metas">
+    <div class="card">
+      <label>Meta diária de lucro</label>
+      <div class="input-wrap">
+        <span>R$</span>
+        <input type="number" id="meta-diaria" min="0" step="1" placeholder="0" inputmode="decimal" />
+      </div>
+      <label>Meta semanal de lucro</label>
+      <div class="input-wrap">
+        <span>R$</span>
+        <input type="number" id="meta-semanal" min="0" step="1" placeholder="0" inputmode="decimal" />
+      </div>
+      <p class="extra">Deixe em 0 pra desativar uma meta.</p>
+    </div>
+    <button class="btn" id="save-metas-btn">Salvar metas</button>
+    <div id="metas-progress" style="margin-top: 16px;"></div>
   </div>
 
 </main>
 
 <script>
 const KEY = 'lucroRotaHistorico';
-let mode = 'sim'; // 'sim' | 'form'
+const METAS_KEY = 'lucroRotaMetas';
+let mode = 'sim'; // 'sim' | 'form' | 'edit'
 let selectedApp = '';
+let editingId = null;
+let returnScreen = 'screen-start';
 
+// ---------- Armazenamento ----------
 function getHistory() {
   try { return JSON.parse(localStorage.getItem(KEY)) || []; }
   catch { return []; }
@@ -329,57 +407,94 @@ function getHistory() {
 function saveHistory(list) {
   localStorage.setItem(KEY, JSON.stringify(list));
 }
+function getMetas() {
+  try { return JSON.parse(localStorage.getItem(METAS_KEY)) || { diaria: 0, semanal: 0 }; }
+  catch { return { diaria: 0, semanal: 0 }; }
+}
+function saveMetas(m) {
+  localStorage.setItem(METAS_KEY, JSON.stringify(m));
+}
 
+// ---------- Formatação ----------
 function fmtMoney(n) {
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 function fmtLitros(n) {
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " l";
 }
+function parseDateKey(dateKey) {
+  const [d, m, y] = dateKey.split('/').map(Number);
+  return new Date(y, m - 1, d);
+}
 
 // ---------- Navegação ----------
-const screens = ['screen-start', 'screen-calc', 'screen-history'];
+const screens = ['screen-start', 'screen-calc', 'screen-history', 'screen-metas'];
 function showScreen(id) {
   screens.forEach(s => document.getElementById(s).classList.toggle('active', s === id));
   const back = document.getElementById('back-btn');
+  const exportBtn = document.getElementById('export-btn');
   const title = document.getElementById('header-title');
   const sub = document.getElementById('header-sub');
   back.style.display = id === 'screen-start' ? 'none' : 'block';
+  exportBtn.style.display = id === 'screen-history' ? 'block' : 'none';
 
   if (id === 'screen-start') {
-    title.textContent = 'Lucro da rota';
+    title.textContent = 'INtregas';
     sub.textContent = 'Escolha o que você quer fazer';
   } else if (id === 'screen-calc') {
-    title.textContent = mode === 'form' ? 'Registrar corrida' : 'Simulação';
-    sub.textContent = mode === 'form' ? 'Preencha os dados da corrida aceita' : 'Calcule sem salvar';
+    title.textContent = mode === 'edit' ? 'Editar corrida' : (mode === 'form' ? 'Registrar corrida' : 'Simulação');
+    sub.textContent = mode === 'edit' ? 'Ajuste os dados e salve' : (mode === 'form' ? 'Preencha os dados da corrida aceita' : 'Calcule sem salvar');
   } else if (id === 'screen-history') {
     title.textContent = 'Histórico';
-    sub.textContent = 'Corridas por dia e por app';
+    sub.textContent = 'Resumos, corridas e exportação';
     renderHistory();
+  } else if (id === 'screen-metas') {
+    title.textContent = 'Metas de lucro';
+    sub.textContent = 'Acompanhe seu progresso';
+    loadMetasForm();
   }
 }
 
-document.getElementById('back-btn').addEventListener('click', () => showScreen('screen-start'));
+document.getElementById('back-btn').addEventListener('click', () => showScreen(returnScreen));
+
 document.getElementById('go-sim').addEventListener('click', () => {
   mode = 'sim';
+  editingId = null;
+  returnScreen = 'screen-start';
+  resetCalcForm();
   document.getElementById('app-field').style.display = 'none';
   document.getElementById('save-btn').style.display = 'none';
+  document.getElementById('save-btn').textContent = 'Salvar no histórico';
   document.getElementById('calc-hint').style.display = 'block';
   showScreen('screen-calc');
 });
 document.getElementById('go-form').addEventListener('click', () => {
   mode = 'form';
+  editingId = null;
+  returnScreen = 'screen-start';
+  resetCalcForm();
   selectedApp = '';
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
   document.getElementById('app-outro-wrap').style.display = 'none';
   document.getElementById('app-field').style.display = 'block';
   document.getElementById('save-btn').style.display = 'block';
+  document.getElementById('save-btn').textContent = 'Salvar no histórico';
   document.getElementById('calc-hint').style.display = 'none';
   showScreen('screen-calc');
 });
 document.getElementById('go-history').addEventListener('click', () => showScreen('screen-history'));
+document.getElementById('go-metas').addEventListener('click', () => showScreen('screen-metas'));
+
+function resetCalcForm() {
+  document.getElementById('km').value = 100;
+  document.getElementById('consumo').value = 10;
+  document.getElementById('preco').value = 6.10;
+  document.getElementById('valor').value = 150;
+  calc();
+}
 
 // ---------- Seleção de app (chips) ----------
+const knownApps = ['Uber', '99', 'InDrive', 'iFood', 'Rappi'];
 document.getElementById('app-chips').addEventListener('click', (e) => {
   const btn = e.target.closest('.chip');
   if (!btn) return;
@@ -420,32 +535,85 @@ function calc() {
   document.getElementById(id).addEventListener('input', calc);
 });
 
-// ---------- Salvar no histórico ----------
+// ---------- Salvar / atualizar no histórico ----------
 document.getElementById('save-btn').addEventListener('click', () => {
   const appName = selectedApp === 'Outro'
     ? (document.getElementById('app-outro').value.trim() || 'Outro')
     : selectedApp;
   if (!appName) { alert('Selecione o app da corrida.'); return; }
 
-  const { km, consumo, litros, custo, valor, lucro } = calc();
-  const now = new Date();
-  const entry = {
-    id: Date.now(),
-    dateKey: now.toLocaleDateString('pt-BR'),
-    time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-    app: appName,
-    km, consumo, litros, custo, valor, lucro
-  };
+  const { km, consumo, preco, litros, custo, valor, lucro } = calc();
   const list = getHistory();
-  list.unshift(entry);
-  saveHistory(list);
 
+  if (mode === 'edit' && editingId !== null) {
+    const idx = list.findIndex(e => e.id === editingId);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], app: appName, km, consumo, preco, litros, custo, valor, lucro };
+      saveHistory(list);
+    }
+  } else {
+    const now = new Date();
+    const entry = {
+      id: Date.now(),
+      dateKey: now.toLocaleDateString('pt-BR'),
+      time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      app: appName,
+      km, consumo, preco, litros, custo, valor, lucro
+    };
+    list.unshift(entry);
+    saveHistory(list);
+  }
+
+  editingId = null;
   showScreen('screen-history');
 });
 
-// ---------- Histórico ----------
+// ---------- Resumos (hoje / 7 dias / mês) ----------
+function computeSummaries(list) {
+  const today = parseDateKey(new Date().toLocaleDateString('pt-BR'));
+  let hoje = 0, semana = 0, mes = 0;
+  list.forEach(e => {
+    const d = parseDateKey(e.dateKey);
+    const diffDays = Math.round((today - d) / 86400000);
+    if (diffDays === 0) hoje += e.lucro;
+    if (diffDays >= 0 && diffDays <= 6) semana += e.lucro;
+    if (d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) mes += e.lucro;
+  });
+  return { hoje, semana, mes };
+}
+
+function renderSummary(list) {
+  const { hoje, semana, mes } = computeSummaries(list);
+  const box = (label, val) => `<div class="summary-box"><div class="label">${label}</div><div class="value${val < 0 ? ' neg' : ''}">${fmtMoney(val)}</div></div>`;
+  document.getElementById('summary-grid').innerHTML =
+    box('Hoje', hoje) + box('Últimos 7 dias', semana) + box('Este mês', mes);
+  return { hoje, semana, mes };
+}
+
+function renderGoalsProgress(hoje, semana) {
+  const metas = getMetas();
+  const container = document.getElementById('goals-progress');
+  let html = '';
+  if (metas.diaria > 0) html += goalBarHtml('Meta diária', hoje, metas.diaria);
+  if (metas.semanal > 0) html += goalBarHtml('Meta semanal (7 dias)', semana, metas.semanal);
+  container.innerHTML = html;
+}
+
+function goalBarHtml(label, atual, meta) {
+  const pct = Math.max(0, Math.min(100, (atual / meta) * 100));
+  const done = pct >= 100;
+  return `<div class="goal-box">
+    <div class="goal-top"><span class="name">${label}</span><span class="nums">${fmtMoney(atual)} / ${fmtMoney(meta)}</span></div>
+    <div class="goal-bar-track"><div class="goal-bar-fill${done ? ' done' : ''}" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+// ---------- Histórico (lista por dia / app) ----------
 function renderHistory() {
   const list = getHistory();
+  const { hoje, semana } = renderSummary(list);
+  renderGoalsProgress(hoje, semana);
+
   const container = document.getElementById('history-list');
   if (list.length === 0) {
     container.innerHTML = '<div class="empty-msg">Nenhuma corrida registrada ainda.</div>';
@@ -458,8 +626,10 @@ function renderHistory() {
     byDate[e.dateKey].push(e);
   });
 
+  const sortedDates = Object.keys(byDate).sort((a, b) => parseDateKey(b) - parseDateKey(a));
+
   let html = '';
-  Object.keys(byDate).forEach(date => {
+  sortedDates.forEach(date => {
     const entries = byDate[date];
     const dayTotal = entries.reduce((s, e) => s + e.lucro, 0);
     html += `<div class="day-group">
@@ -480,9 +650,14 @@ function renderHistory() {
         const negClass = e.lucro < 0 ? ' neg' : '';
         html += `<div class="entry-row">
           <span class="meta">${e.time} &middot; ${e.km} km &middot; ${e.consumo} km/l</span>
-          <span>
+          <span class="right">
             <span class="lucro-val${negClass}">${fmtMoney(e.lucro)}</span>
-            <button class="del" data-id="${e.id}" aria-label="Excluir">&times;</button>
+            <button class="icon-btn edit" data-id="${e.id}" aria-label="Editar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+            </button>
+            <button class="icon-btn del" data-id="${e.id}" aria-label="Excluir">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
           </span>
         </div>`;
       });
@@ -501,7 +676,106 @@ function renderHistory() {
       renderHistory();
     });
   });
+
+  container.querySelectorAll('.edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = Number(btn.dataset.id);
+      const entry = getHistory().find(e => e.id === id);
+      if (!entry) return;
+      openEditForm(entry);
+    });
+  });
 }
+
+function openEditForm(entry) {
+  mode = 'edit';
+  editingId = entry.id;
+  returnScreen = 'screen-history';
+
+  document.getElementById('km').value = entry.km;
+  document.getElementById('consumo').value = entry.consumo;
+  document.getElementById('preco').value = entry.preco != null ? entry.preco : (entry.litros > 0 ? +(entry.custo / entry.litros).toFixed(2) : 0);
+  document.getElementById('valor').value = entry.valor;
+
+  selectedApp = entry.app;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  if (knownApps.includes(entry.app)) {
+    const chip = document.querySelector(`.chip[data-app="${entry.app}"]`);
+    if (chip) chip.classList.add('selected');
+    document.getElementById('app-outro-wrap').style.display = 'none';
+  } else {
+    const chip = document.querySelector('.chip[data-app="Outro"]');
+    if (chip) chip.classList.add('selected');
+    selectedApp = 'Outro';
+    document.getElementById('app-outro-wrap').style.display = 'flex';
+    document.getElementById('app-outro').value = entry.app;
+  }
+
+  document.getElementById('app-field').style.display = 'block';
+  document.getElementById('save-btn').style.display = 'block';
+  document.getElementById('save-btn').textContent = 'Salvar alterações';
+  document.getElementById('calc-hint').style.display = 'none';
+
+  calc();
+  showScreen('screen-calc');
+}
+
+// ---------- Exportar CSV ----------
+document.getElementById('export-btn').addEventListener('click', () => {
+  const list = getHistory();
+  if (list.length === 0) { alert('Não há corridas para exportar ainda.'); return; }
+
+  const sorted = [...list].sort((a, b) => parseDateKey(a.dateKey) - parseDateKey(b.dateKey) || (a.id - b.id));
+  const rows = [['Data', 'Hora', 'App', 'Km', 'Consumo (km/l)', 'Litros', 'Custo combustível', 'Valor da rota', 'Lucro']];
+  sorted.forEach(e => {
+    rows.push([
+      e.dateKey, e.time, e.app,
+      String(e.km).replace('.', ','),
+      String(e.consumo).replace('.', ','),
+      e.litros.toFixed(2).replace('.', ','),
+      e.custo.toFixed(2).replace('.', ','),
+      e.valor.toFixed(2).replace('.', ','),
+      e.lucro.toFixed(2).replace('.', ',')
+    ]);
+  });
+  const csv = rows.map(r => r.join(';')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `historico-intregas-${today}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+// ---------- Metas ----------
+function loadMetasForm() {
+  const metas = getMetas();
+  document.getElementById('meta-diaria').value = metas.diaria || '';
+  document.getElementById('meta-semanal').value = metas.semanal || '';
+  renderMetasProgress();
+}
+
+function renderMetasProgress() {
+  const list = getHistory();
+  const { hoje, semana } = computeSummaries(list);
+  const metas = getMetas();
+  const container = document.getElementById('metas-progress');
+  let html = '';
+  if (metas.diaria > 0) html += goalBarHtml('Progresso de hoje', hoje, metas.diaria);
+  if (metas.semanal > 0) html += goalBarHtml('Progresso dos últimos 7 dias', semana, metas.semanal);
+  container.innerHTML = html;
+}
+
+document.getElementById('save-metas-btn').addEventListener('click', () => {
+  const diaria = parseFloat(document.getElementById('meta-diaria').value) || 0;
+  const semanal = parseFloat(document.getElementById('meta-semanal').value) || 0;
+  saveMetas({ diaria, semanal });
+  renderMetasProgress();
+});
 
 calc();
 
