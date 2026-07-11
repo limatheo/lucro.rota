@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Lucro da Rota</title>
+<meta name="theme-color" content="#0F6E56" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #F1EFE8;
+    color: #2C2C2A;
+    min-height: 100vh;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+  }
+  header {
+    background: #0F6E56;
+    color: #E1F5EE;
+    padding: 20px 20px 24px;
+    text-align: center;
+    position: relative;
+  }
+  header h1 { font-size: 20px; font-weight: 600; margin: 0; }
+  header p { font-size: 13px; margin: 4px 0 0; opacity: 0.85; }
+  .back-btn {
+    position: absolute;
+    left: 14px;
+    top: 18px;
+    background: none;
+    border: none;
+    color: #E1F5EE;
+    font-size: 22px;
+    padding: 4px 8px;
+    display: none;
+  }
+  main {
+    max-width: 420px;
+    margin: -14px auto 0;
+    padding: 0 16px 90px;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .card {
+    background: #FFFFFF;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: #5F5E5A;
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  label:first-child { margin-top: 0; }
+  .input-wrap {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #D3D1C7;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #FAFAF8;
+  }
+  .input-wrap span {
+    padding: 0 12px;
+    color: #888780;
+    font-size: 15px;
+  }
+  input[type="number"], input[type="text"], select {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 12px 12px 12px 0;
+    font-size: 16px;
+    outline: none;
+    color: #2C2C2A;
+    width: 100%;
+    -moz-appearance: textfield;
+    font-family: inherit;
+  }
+  select { padding: 12px; appearance: none; -webkit-appearance: none; }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .result-box {
+    background: #EAF3DE;
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .result-box.lucro { background: #E1F5EE; }
+  .result-box.negativo { background: #FCEBEB; }
+  .result-box .label { font-size: 12px; color: #5F5E5A; margin-bottom: 4px; }
+  .result-box .value { font-size: 19px; font-weight: 700; color: #27500A; }
+  .result-box.lucro .value { color: #085041; }
+  .result-box.negativo .value { color: #791F1F; }
+  .alerta {
+    display: none;
+    margin-top: 12px;
+    font-size: 13px;
+    color: #791F1F;
+    background: #FCEBEB;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .extra {
+    font-size: 12px;
+    color: #888780;
+    text-align: center;
+    margin-top: 6px;
+  }
+  .big-btn {
+    display: block;
+    width: 100%;
+    padding: 20px;
+    border-radius: 14px;
+    border: none;
+    background: #FFFFFF;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    text-align: left;
+    margin-bottom: 14px;
+    font-family: inherit;
+  }
+  .big-btn .title { font-size: 17px; font-weight: 700; color: #2C2C2A; margin-bottom: 3px; }
+  .big-btn .desc { font-size: 13px; color: #888780; }
+  .big-btn.primary { background: #0F6E56; }
+  .big-btn.primary .title { color: #E1F5EE; }
+  .big-btn.primary .desc { color: #9FE1CB; }
+  .btn {
+    width: 100%;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    background: #0F6E56;
+    color: #E1F5EE;
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 6px;
+    font-family: inherit;
+  }
+  .btn.secondary {
+    background: #FFFFFF;
+    color: #5F5E5A;
+    border: 1.5px solid #D3D1C7;
+  }
+  .app-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1.5px solid #D3D1C7;
+    background: #FAFAF8;
+    font-size: 13px;
+    color: #5F5E5A;
+    font-family: inherit;
+  }
+  .chip.selected {
+    background: #0F6E56;
+    border-color: #0F6E56;
+    color: #E1F5EE;
+  }
+  .day-group { margin-bottom: 18px; }
+  .day-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #5F5E5A;
+    margin: 0 0 8px 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .app-group {
+    background: #FFFFFF;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .app-group-header {
+    padding: 10px 14px;
+    background: #EAF3DE;
+    font-size: 13px;
+    font-weight: 700;
+    color: #27500A;
+    display: flex;
+    justify-content: space-between;
+  }
+  .entry-row {
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #F1EFE8;
+    font-size: 13px;
+  }
+  .entry-row .meta { color: #888780; }
+  .entry-row .lucro-val { font-weight: 700; color: #085041; }
+  .entry-row .lucro-val.neg { color: #791F1F; }
+  .entry-row .del {
+    background: none;
+    border: none;
+    color: #B4B2A9;
+    font-size: 16px;
+    padding: 0 0 0 10px;
+  }
+  .empty-msg {
+    text-align: center;
+    color: #888780;
+    font-size: 14px;
+    padding: 40px 10px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <button class="back-btn" id="back-btn">&#8592;</button>
+  <h1 id="header-title">Lucro da rota</h1>
+  <p id="header-sub">Escolha o que você quer fazer</p>
+</header>
+<main>
+
+  <div class="screen active" id="screen-start">
+    <button class="big-btn primary" id="go-sim">
+      <div class="title">Simulação de valor</div>
+      <div class="desc">Só quero calcular, sem salvar no histórico</div>
+    </button>
+    <button class="big-btn" id="go-form">
+      <div class="title">Aceitei uma corrida</div>
+      <div class="desc">Registrar no histórico do dia</div>
+    </button>
+    <button class="big-btn" id="go-history">
+      <div class="title">Ver histórico</div>
+      <div class="desc">Corridas registradas por dia e por app</div>
+    </button>
+  </div>
+
+  <div class="screen" id="screen-calc">
+    <div class="card">
+      <label>Distância total (km)</label>
+      <div class="input-wrap">
+        <input type="number" id="km" value="100" min="0" step="1" inputmode="decimal" />
+        <span>km</span>
+      </div>
+      <label>Consumo médio do veículo</label>
+      <div class="input-wrap">
+        <input type="number" id="consumo" value="10" min="0.1" step="0.1" inputmode="decimal" />
+        <span>km/l</span>
+      </div>
+      <label>Preço do combustível</label>
+      <div class="input-wrap">
+        <span>R$</span>
+        <input type="number" id="preco" value="6.10" min="0" step="0.01" inputmode="decimal" />
+      </div>
+      <label>Valor a receber pela rota</label>
+      <div class="input-wrap">
+        <span>R$</span>
+        <input type="number" id="valor" value="150" min="0" step="1" inputmode="decimal" />
+      </div>
+
+      <div id="app-field" style="display:none;">
+        <label>App da corrida</label>
+        <div class="app-chips" id="app-chips">
+          <button type="button" class="chip" data-app="Uber">Uber</button>
+          <button type="button" class="chip" data-app="99">99</button>
+          <button type="button" class="chip" data-app="InDrive">InDrive</button>
+          <button type="button" class="chip" data-app="iFood">iFood</button>
+          <button type="button" class="chip" data-app="Rappi">Rappi</button>
+          <button type="button" class="chip" data-app="Outro">Outro</button>
+        </div>
+        <div class="input-wrap" id="app-outro-wrap" style="display:none; margin-top: 8px;">
+          <input type="text" id="app-outro" placeholder="Nome do app" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="results">
+        <div class="result-box">
+          <div class="label">Combustível gasto</div>
+          <div class="value" id="litros-out">0 l</div>
+        </div>
+        <div class="result-box">
+          <div class="label">Custo combustível</div>
+          <div class="value" id="custo-out">R$ 0,00</div>
+        </div>
+      </div>
+      <div class="results" style="margin-top: 10px;">
+        <div class="result-box lucro" id="lucro-box" style="grid-column: 1 / -1;">
+          <div class="label">Lucro final</div>
+          <div class="value" id="lucro-out">R$ 0,00</div>
+        </div>
+      </div>
+      <div class="alerta" id="alerta">O custo de combustível é maior que o valor a receber.</div>
+    </div>
+
+    <button class="btn" id="save-btn" style="display:none;">Salvar no histórico</button>
+    <p class="extra" id="calc-hint">Simulação — nada é salvo</p>
+  </div>
+
+  <div class="screen" id="screen-history">
+    <div id="history-list"></div>
+  </div>
+
+</main>
+
+<script>
+const KEY = 'lucroRotaHistorico';
+let mode = 'sim'; // 'sim' | 'form'
+let selectedApp = '';
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch { return []; }
+}
+function saveHistory(list) {
+  localStorage.setItem(KEY, JSON.stringify(list));
+}
+
+function fmtMoney(n) {
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function fmtLitros(n) {
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " l";
+}
+
+// ---------- Navegação ----------
+const screens = ['screen-start', 'screen-calc', 'screen-history'];
+function showScreen(id) {
+  screens.forEach(s => document.getElementById(s).classList.toggle('active', s === id));
+  const back = document.getElementById('back-btn');
+  const title = document.getElementById('header-title');
+  const sub = document.getElementById('header-sub');
+  back.style.display = id === 'screen-start' ? 'none' : 'block';
+
+  if (id === 'screen-start') {
+    title.textContent = 'Lucro da rota';
+    sub.textContent = 'Escolha o que você quer fazer';
+  } else if (id === 'screen-calc') {
+    title.textContent = mode === 'form' ? 'Registrar corrida' : 'Simulação';
+    sub.textContent = mode === 'form' ? 'Preencha os dados da corrida aceita' : 'Calcule sem salvar';
+  } else if (id === 'screen-history') {
+    title.textContent = 'Histórico';
+    sub.textContent = 'Corridas por dia e por app';
+    renderHistory();
+  }
+}
+
+document.getElementById('back-btn').addEventListener('click', () => showScreen('screen-start'));
+document.getElementById('go-sim').addEventListener('click', () => {
+  mode = 'sim';
+  document.getElementById('app-field').style.display = 'none';
+  document.getElementById('save-btn').style.display = 'none';
+  document.getElementById('calc-hint').style.display = 'block';
+  showScreen('screen-calc');
+});
+document.getElementById('go-form').addEventListener('click', () => {
+  mode = 'form';
+  selectedApp = '';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('app-outro-wrap').style.display = 'none';
+  document.getElementById('app-field').style.display = 'block';
+  document.getElementById('save-btn').style.display = 'block';
+  document.getElementById('calc-hint').style.display = 'none';
+  showScreen('screen-calc');
+});
+document.getElementById('go-history').addEventListener('click', () => showScreen('screen-history'));
+
+// ---------- Seleção de app (chips) ----------
+document.getElementById('app-chips').addEventListener('click', (e) => {
+  const btn = e.target.closest('.chip');
+  if (!btn) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedApp = btn.dataset.app;
+  document.getElementById('app-outro-wrap').style.display = selectedApp === 'Outro' ? 'flex' : 'none';
+});
+
+// ---------- Cálculo ----------
+function calc() {
+  const km = parseFloat(document.getElementById('km').value) || 0;
+  const consumo = parseFloat(document.getElementById('consumo').value) || 0;
+  const preco = parseFloat(document.getElementById('preco').value) || 0;
+  const valor = parseFloat(document.getElementById('valor').value) || 0;
+
+  const litros = consumo > 0 ? km / consumo : 0;
+  const custo = litros * preco;
+  const lucro = valor - custo;
+
+  document.getElementById('litros-out').textContent = fmtLitros(litros);
+  document.getElementById('custo-out').textContent = fmtMoney(custo);
+  document.getElementById('lucro-out').textContent = fmtMoney(lucro);
+
+  const lucroBox = document.getElementById('lucro-box');
+  const alerta = document.getElementById('alerta');
+  if (lucro < 0) {
+    lucroBox.classList.add('negativo');
+    alerta.style.display = 'block';
+  } else {
+    lucroBox.classList.remove('negativo');
+    alerta.style.display = 'none';
+  }
+  return { km, consumo, preco, valor, litros, custo, lucro };
+}
+
+['km', 'consumo', 'preco', 'valor'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', calc);
+});
+
+// ---------- Salvar no histórico ----------
+document.getElementById('save-btn').addEventListener('click', () => {
+  const appName = selectedApp === 'Outro'
+    ? (document.getElementById('app-outro').value.trim() || 'Outro')
+    : selectedApp;
+  if (!appName) { alert('Selecione o app da corrida.'); return; }
+
+  const { km, consumo, litros, custo, valor, lucro } = calc();
+  const now = new Date();
+  const entry = {
+    id: Date.now(),
+    dateKey: now.toLocaleDateString('pt-BR'),
+    time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    app: appName,
+    km, consumo, litros, custo, valor, lucro
+  };
+  const list = getHistory();
+  list.unshift(entry);
+  saveHistory(list);
+
+  showScreen('screen-history');
+});
+
+// ---------- Histórico ----------
+function renderHistory() {
+  const list = getHistory();
+  const container = document.getElementById('history-list');
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-msg">Nenhuma corrida registrada ainda.</div>';
+    return;
+  }
+
+  const byDate = {};
+  list.forEach(e => {
+    if (!byDate[e.dateKey]) byDate[e.dateKey] = [];
+    byDate[e.dateKey].push(e);
+  });
+
+  let html = '';
+  Object.keys(byDate).forEach(date => {
+    const entries = byDate[date];
+    const dayTotal = entries.reduce((s, e) => s + e.lucro, 0);
+    html += `<div class="day-group">
+      <div class="day-title"><span>${date}</span><span>${fmtMoney(dayTotal)}</span></div>`;
+
+    const byApp = {};
+    entries.forEach(e => {
+      if (!byApp[e.app]) byApp[e.app] = [];
+      byApp[e.app].push(e);
+    });
+
+    Object.keys(byApp).forEach(app => {
+      const appEntries = byApp[app];
+      const appTotal = appEntries.reduce((s, e) => s + e.lucro, 0);
+      html += `<div class="app-group">
+        <div class="app-group-header"><span>${app}</span><span>${fmtMoney(appTotal)}</span></div>`;
+      appEntries.forEach(e => {
+        const negClass = e.lucro < 0 ? ' neg' : '';
+        html += `<div class="entry-row">
+          <span class="meta">${e.time} &middot; ${e.km} km &middot; ${e.consumo} km/l</span>
+          <span>
+            <span class="lucro-val${negClass}">${fmtMoney(e.lucro)}</span>
+            <button class="del" data-id="${e.id}" aria-label="Excluir">&times;</button>
+          </span>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+
+  container.querySelectorAll('.del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = Number(btn.dataset.id);
+      const updated = getHistory().filter(e => e.id !== id);
+      saveHistory(updated);
+      renderHistory();
+    });
+  });
+}
+
+calc();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
